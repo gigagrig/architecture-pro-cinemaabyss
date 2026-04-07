@@ -1,0 +1,58 @@
+@startuml
+title CinemaAbyss - To-Be Container Diagram
+
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam packageStyle rectangle
+skinparam rectangle {
+  RoundCorner 12
+}
+skinparam ArrowColor #4C5B61
+skinparam ArrowThickness 1
+
+actor "Зритель" as customer
+actor "Команда продукта\nи операций" as business
+rectangle "Клиентские приложения\nWeb / Mobile / Partner UI" as channels #DAE8FC
+
+rectangle "CinemaAbyss" as systemBoundary {
+  rectangle "proxy-service\nЕдиная точка входа\n\nПринимает запросы клиентских приложений и направляет их в нужные части платформы." as proxy #D5E8D4
+  rectangle "monolith\nОсновные бизнес-возможности\n\nУправляет пользователями, подписками и платежами, а также сохраняет часть исторической логики." as monolith #F8CECC
+  rectangle "movies-service\nКаталог фильмов\n\nОтвечает за операции с фильмами и позволяет постепенно выносить этот домен из монолита." as movies #DAE8FC
+  rectangle "events-service\nИнтеграция событий\n\nОбрабатывает события платформы и связывает синхронные сценарии с событийным взаимодействием." as events #E1D5E7
+  database "Общее хранилище данных\n\nИспользуется сервисами платформы на переходном этапе." as postgres #FFF2CC
+  queue "Платформа событий\n\nПередаёт и распространяет события между компонентами." as kafka #FFE6CC
+}
+
+customer --> channels : Использует сервис
+channels --> proxy : Получает единый доступ\nк возможностям платформы
+business --> proxy : Контролирует пользовательский путь\nчерез единую точку входа
+
+proxy --> monolith : Передаёт запросы\nк основным бизнес-возможностям
+proxy --> movies : Передаёт запросы\nк каталогу фильмов
+proxy --> events : Передаёт запросы,\nсвязанные с событиями
+
+monolith --> postgres : Работает с данными платформы
+movies --> postgres : Работает с данными каталога
+events --> kafka : Передаёт и получает события
+events --> postgres : Использует общие данные\nна переходном этапе
+
+note bottom of proxy
+Контейнерная диаграмма показывает
+функциональные блоки платформы
+и их роль в пользовательском пути.
+
+Низкоуровневые детали маршрутизации,
+конкретные API и механика миграции
+вынесены в отдельные технические схемы.
+end note
+
+note bottom of systemBoundary
+Ключевые решения:
+1. Все клиентские вызовы идут через proxy-service.
+2. Бизнес-возможности разделены на основные домены, каталог фильмов и событийную интеграцию.
+3. Каталог фильмов вынесен в отдельный контейнер для поэтапной миграции.
+4. На переходном этапе часть контейнеров использует общее хранилище данных.
+end note
+
+@enduml

@@ -1,0 +1,46 @@
+@startuml
+title CinemaAbyss - C4 Context Diagram
+
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam packageStyle rectangle
+skinparam rectangle {
+  RoundCorner 12
+}
+skinparam ArrowColor #4C5B61
+skinparam ArrowThickness 1
+
+actor "Зритель" as customer
+actor "Команда продукта\nи операций" as business
+actor "Команда разработки" as engineering
+
+rectangle "CinemaAbyss\nЦифровая платформа онлайн-кинотеатра" as cinema #D9EAD3
+rectangle "Клиентские приложения\nWeb / Mobile / Partner UI" as channels #DAE8FC
+rectangle "Платформа поставки\nCI/CD и Kubernetes" as delivery #FCE5CD
+
+customer --> channels : Использует сервис
+channels --> cinema : Получает единый доступ\nк возможностям платформы
+business --> cinema : Управляет развитием,\nэксплуатацией и качеством сервиса
+engineering --> delivery : Поставляет изменения
+delivery --> cinema : Разворачивает новые версии
+
+note bottom of cinema
+Платформа CinemaAbyss предоставляет:
+- каталог фильмов
+- управление пользователями
+- подписки и платежи
+- интеграцию событий между компонентами
+end note
+
+note right of cinema
+На этом уровне не показываются:
+- внутренние сервисы и их границы
+- базы данных и брокеры сообщений
+- конкретные API и правила маршрутизации
+
+Эти детали вынесены в контейнерные
+и другие технические диаграммы.
+end note
+
+@enduml
