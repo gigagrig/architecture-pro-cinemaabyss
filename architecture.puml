@@ -1,0 +1,37 @@
+@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+LAYOUT_WITH_LEGEND()
+
+title Container diagram for CinemaAbyss To-Be Architecture
+
+Person(user, "User", "Пользователь сервиса (Web, Mobile, Smart TV)")
+
+System_Ext(recsys, "Recommendation System", "Сторонняя рекомендательная система")
+
+System_Boundary(cinema, "Кинобездна") {
+    Container(api_gateway, "API Gateway / Proxy", "Go/Node/Python", "Единая точка входа. Маршрутизирует запросы и переключает трафик (Strangler Fig)")
+    
+    Container(movies_service, "Movies Service", "Go", "Сервис метаданных о фильмах (жанры, актеры, оценки)")
+    Container(events_service, "Events Service", "Go/Node/Python", "Сервис аналитики. Принимает события и отправляет их в Kafka")
+    
+    Container(monolith, "Core Monolith", "Go", "Исторический монолит: пользователи, платежи, видео, подписки")
+    
+    ContainerDb(db, "Database", "PostgreSQL", "Единая БД (в будущем будет разделена по сервисам)")
+    ContainerDb(kafka, "Message Broker", "Kafka", "Асинхронная шина данных для событий")
+}
+
+Rel(user, api_gateway, "Запросы к API", "HTTPS/REST")
+
+Rel(api_gateway, movies_service, "Маршрутизирует /api/movies", "HTTP/REST")
+Rel(api_gateway, events_service, "Маршрутизирует /api/events", "HTTP/REST")
+Rel(api_gateway, monolith, "Остальные запросы", "HTTP/REST")
+
+Rel(movies_service, db, "Чтение/запись данных фильмов", "TCP/SQL")
+Rel(monolith, db, "Чтение/запись остальных данных", "TCP/SQL")
+
+Rel(events_service, kafka, "Отправка и чтение событий", "TCP")
+
+Rel(monolith, recsys, "Получение рекомендаций", "HTTPS/REST")
+
+@enduml
