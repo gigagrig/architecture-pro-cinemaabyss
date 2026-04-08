@@ -41,6 +41,19 @@
 3. Добавить сервис в `docker-compose.yml`.
 4. Проверить работу через Postman и UI Kafka (http://localhost:8090). Сделать скриншоты для отчета.
 
+### Результат выполнения шага 2
+- Реализован `proxy-service` в `src/microservices/proxy` на Go с паттерном Strangler Fig.
+- Реализовано процентное переключение трафика для `/api/movies` через `GRADUAL_MIGRATION` и `MOVIES_MIGRATION_PERCENT`.
+- Настроено проксирование `/api/events` на `events-service`, остальных запросов на `monolith`.
+- Реализован `events-service` в `src/microservices/events` на Go с Kafka Producer/Consumer.
+- Добавлены API эндпоинты `/api/events/health`, `/api/events/movie`, `/api/events/user`, `/api/events/payment`.
+- Consumer читает сообщения из Kafka и пишет обработанные события в лог сервиса.
+- Для обоих сервисов добавлены `Dockerfile`.
+- Проверка через `docker compose up -d --build` выполнена успешно.
+- Проверка `curl http://127.0.0.1:8000/api/movies` выполнена успешно, список фильмов возвращается через `proxy-service`.
+- Тесты `npm run test:local` из `tests/postman` пройдены успешно: `22 requests`, `42 assertions`, `0 failed`.
+- В логах подтверждено, что `proxy-service` маршрутизирует запросы к `/api/movies` как в `monolith`, так и в `movies-service`, а `events-service` публикует и читает события из Kafka.
+
 ---
 
 ## Шаг 3: CI/CD и Kubernetes
