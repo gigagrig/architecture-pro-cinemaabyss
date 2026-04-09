@@ -3,12 +3,9 @@ name: Docker Build and Push
 on:
   workflow_dispatch:
   push:
-    branches:
-      - "**"
+    branches: [ main, cinema, cinema-dev ]
     paths:
       - 'src/**'
-      - 'docker-compose.yml'
-      - '.github/workflows/api-tests.yml'
       - '.github/workflows/docker-build-push.yml'
   release:
     types: [published]
@@ -29,7 +26,7 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
@@ -54,7 +51,7 @@ jobs:
             type=raw,value=latest
 
       - name: Build and push Monolith Docker image
-        uses: docker/build-push-action@v4
+        uses: docker/build-push-action@v5
         with:
           context: ./src/monolith
           push: true
@@ -76,7 +73,7 @@ jobs:
             type=raw,value=latest
 
       - name: Build and push Movies Service Docker image
-        uses: docker/build-push-action@v4
+        uses: docker/build-push-action@v5
         with:
           context: ./src/microservices/movies
           push: true
@@ -98,7 +95,7 @@ jobs:
             type=raw,value=latest
 
       - name: Build and push Events Service Docker image
-        uses: docker/build-push-action@v4
+        uses: docker/build-push-action@v5
         with:
           context: ./src/microservices/events
           push: true
@@ -120,7 +117,7 @@ jobs:
             type=raw,value=latest
 
       - name: Build and push Proxy Service Docker image
-        uses: docker/build-push-action@v4
+        uses: docker/build-push-action@v5
         with:
           context: ./src/microservices/proxy
           push: true
