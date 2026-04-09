@@ -2,9 +2,22 @@ name: API Tests
 
 on:
   push:
-    branches: [ main, master ]
+    branches:
+      - "**"
+    paths:
+      - 'src/**'
+      - 'docker-compose.yml'
+      - 'tests/postman/**'
+      - '.github/workflows/api-tests.yml'
+      - '.github/workflows/docker-build-push.yml'
   pull_request:
     branches: [ main, master ]
+    paths:
+      - 'src/**'
+      - 'docker-compose.yml'
+      - 'tests/postman/**'
+      - '.github/workflows/api-tests.yml'
+      - '.github/workflows/docker-build-push.yml'
   workflow_dispatch:
     inputs:
       environment:
@@ -35,10 +48,23 @@ jobs:
       
       - name: Start services with Docker Compose
         run: |
-          docker compose up -d
-          # Wait for services to be ready
-          echo "Waiting for services to be ready..."
-          sleep 120
+          docker compose up -d --build
+
+      - name: Wait for services to be ready
+        run: |
+          for i in $(seq 1 30); do
+            if curl -fsS http://127.0.0.1:8000/health >/dev/null && \
+               curl -fsS http://127.0.0.1:8081/api/movies/health >/dev/null && \
+               curl -fsS http://127.0.0.1:8082/api/events/health >/dev/null; then
+              exit 0
+            fi
+            echo "Waiting for application services..."
+            sleep 10
+          done
+
+          echo "Services did not become ready in time"
+          docker compose ps
+          exit 1
       
       - name: Set up Node.js
         uses: actions/setup-node@v3
@@ -49,22 +75,13 @@ jobs:
       
       - name: Install Newman and dependencies
         working-directory: tests/postman
-        run: npm install
-      
+        run: npm ci
+
       - name: Run API tests
         working-directory: tests/postman
         run: |
-
-          docker compose up -d
-          # Wait for services to be ready
-          echo "Waiting for services to be ready..."
-          sleep 15
-          # Build the Docker image
           docker build -t cinemaabyss-api-tests .
-          
-          # Run the tests in Docker
           docker run --network=cinemaabyss-network -v "$(pwd)/reports:/app/reports" cinemaabyss-api-tests
-        
       
       - name: Stop services
         if: always()
