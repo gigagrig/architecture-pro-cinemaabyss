@@ -127,7 +127,7 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-# This job calls your separate test file
-trigger-tests:
-  needs: build-and-push
-  uses: ./.github/workflows/api-tests.yml
+  # This job calls your separate test file
+  trigger-tests:
+    needs: build-and-push
+    uses: ./.github/workflows/api-tests.yml
