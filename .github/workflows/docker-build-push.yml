@@ -7,6 +7,7 @@ on:
     paths:
       - 'src/**'
       - '.github/workflows/docker-build-push.yml'
+      - '.github/workflows/api-tests.yml'
   release:
     types: [published]
 
@@ -125,3 +126,8 @@ jobs:
           labels: ${{ steps.meta-proxy.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
+
+# This job calls your separate test file
+trigger-tests:
+  needs: build-and-push
+  uses: ./.github/workflows/api-tests.yml
