@@ -24,8 +24,21 @@ spec:
         app: proxy-service
     spec:
       containers:
-      - name: proxy-service
-        ..... тут
+        - name: proxy-service
+          image: "{{ .Values.proxyService.image.repository }}:{{ .Values.proxyService.image.tag }}"
+          imagePullPolicy: {{ .Values.proxyService.image.pullPolicy }}
+          ports:
+            - containerPort: {{ .Values.proxyService.service.targetPort }}
+              name: http
+          # Передаем параметры миграции в виде переменных окружения
+          env:
+            - name: GRADUAL_MIGRATION
+              value: {{ .Values.config.gradualMigration | quote }}
+            - name: MOVIES_MIGRATION_PERCENT
+              value: {{ .Values.config.moviesMigrationPercent | quote }}
+          # Подтягиваем ресурсы
+          resources:
+            {{- toYaml .Values.proxyService.resources | nindent 12 }}
 ---
 apiVersion: v1
 kind: Service
@@ -37,6 +50,12 @@ metadata:
     app.kubernetes.io/name: {{ include "cinemaabyss.name" . }}
     app.kubernetes.io/instance: {{ .Release.Name }}
 spec:
+  type: {{ .Values.proxyService.service.type }}
   selector:
-    ... и тут
+    app: proxy-service
+  ports:
+    - port: {{ .Values.proxyService.service.port }}
+      targetPort: {{ .Values.proxyService.service.targetPort }}
+      protocol: TCP
+      name: http
 {{- end }}
