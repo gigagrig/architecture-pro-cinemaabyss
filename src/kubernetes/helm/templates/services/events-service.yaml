@@ -30,6 +30,12 @@ spec:
           ports:
             - containerPort: {{ .Values.eventsService.service.targetPort }}
               name: http
+          env:
+            - name: PORT
+              value: {{ .Values.eventsService.service.targetPort | quote }}
+          envFrom:
+            - configMapRef:
+                name: cinemaabyss-config
           # Подтягиваем лимиты и реквесты ресурсов
           resources:
             {{- toYaml .Values.eventsService.resources | nindent 12 }}

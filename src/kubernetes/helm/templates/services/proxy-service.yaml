@@ -30,12 +30,16 @@ spec:
           ports:
             - containerPort: {{ .Values.proxyService.service.targetPort }}
               name: http
-          # Передаем параметры миграции в виде переменных окружения
           env:
+            - name: PORT
+              value: {{ .Values.proxyService.service.targetPort | quote }}
             - name: GRADUAL_MIGRATION
               value: {{ .Values.config.gradualMigration | quote }}
             - name: MOVIES_MIGRATION_PERCENT
               value: {{ .Values.config.moviesMigrationPercent | quote }}
+          envFrom:
+            - configMapRef:
+                name: cinemaabyss-config
           # Подтягиваем ресурсы
           resources:
             {{- toYaml .Values.proxyService.resources | nindent 12 }}
